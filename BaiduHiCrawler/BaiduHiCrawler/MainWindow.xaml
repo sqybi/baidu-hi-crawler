@@ -1,14 +1,36 @@
 ﻿<Window x:Class="BaiduHiCrawler.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
+        Title="BaiduHiCrawler" Height="350" Width="525">
     <Grid>
-        <TabControl HorizontalAlignment="Left" VerticalAlignment="Top">
+        <TabControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <TabItem Header="Crawl from web">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="35"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <WebBrowser Name="WebBrowserCrawler" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5"></WebBrowser>
+                    <Button Name="ButtonNavigateToLoginPage" Grid.Row="1" Grid.Column="0" Margin="5">Login Page</Button>
+                    <Button Name="ButtonStartCrawling" Grid.Row="1" Grid.Column="1" Margin="5">Start Crawling</Button>
+                </Grid>
             </TabItem>
             <TabItem Header="Load from local">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="35"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <ListView Name="ListViewCrawlResult" Grid.Row="0" Margin="5"></ListView>
+                    <Button Name="ButtonLoadFromLocal" Grid.Row="1" Margin="5">Load from local</Button>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>
