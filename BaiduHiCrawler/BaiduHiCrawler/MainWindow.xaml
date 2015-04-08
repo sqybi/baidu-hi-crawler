@@ -1,0 +1,15 @@
+﻿<Window x:Class="BaiduHiCrawler.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <TabControl HorizontalAlignment="Left" VerticalAlignment="Top">
+            <TabItem Header="Crawl from web">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+            <TabItem Header="Load from local">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
