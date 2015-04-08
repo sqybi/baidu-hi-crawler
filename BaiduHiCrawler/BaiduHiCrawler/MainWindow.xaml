@@ -15,8 +15,8 @@
                         <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <WebBrowser Name="WebBrowserCrawler" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5"></WebBrowser>
-                    <Button Name="ButtonNavigateToLoginPage" Grid.Row="1" Grid.Column="0" Margin="5">Login Page</Button>
-                    <Button Name="ButtonStartCrawling" Grid.Row="1" Grid.Column="1" Margin="5">Start Crawling</Button>
+                    <Button Name="ButtonNavigateToLoginPage" Grid.Row="1" Grid.Column="0" Margin="5" Click="ButtonNavigateToLoginPage_Click">Login Page</Button>
+                    <Button Name="ButtonStartCrawling" Grid.Row="1" Grid.Column="1" Margin="5" Click="ButtonStartCrawling_Click">Start Crawling</Button>
                 </Grid>
             </TabItem>
             <TabItem Header="Load from local">
