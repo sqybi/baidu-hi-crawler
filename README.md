@@ -4,8 +4,6 @@
 
 百度本身会将文章内容转移到百度网盘，但并不会保留格式和评论。本软件在抓取时将保留全部HTML格式及评论内容。
 
-软件当前版本为0.1.0。
-
 # 使用方法
 
 ## 抓取百度空间文章/评论
@@ -14,7 +12,7 @@
 2. 在登录页面输入你的用户名密码登录。（这一步是为了能够拿到你的空间地址和私有文章，也是为了防止使用此工具抓取他人文章。软件并不会记录或上传任何你的用户名和密码信息。）
 3. 点击“Start Crawling”按钮，软件开始自动抓取。
 4. 若抓取成功，软件会弹出对话框：“Crawling Finished!”。若失败，则会弹出“Crawling Failed, exception: \<exception content\>”，请协助将对话框内容以文字或图片形式添加issue，以便于修复问题。添加issue地址： https://github.com/sqybi/baidu-hi-crawler/issues 。
-5. 抓取成功后的文件存储于程序所在目录Articles文件夹下的\<baidu hi url\>.json文件中，其中\<baidu hi url\>为你的百度空间URL后缀。如：百度空间地址为 http://hi.baidu.com/sqybi ，则抓取结果存放在sqybi.json文件里。
+5. 抓取成功后的文件存储于程序所在目录Archive文件夹下的\<baidu hi url\>.json文件中，其中\<baidu hi url\>为你的百度空间URL后缀。如：百度空间地址为 http://hi.baidu.com/sqybi ，则抓取结果存放在sqybi.json文件里。
 
 ## 加载已经抓取的文章/评论
 
@@ -30,3 +28,15 @@
 * 如果在抓取时出错，可能是网络情况不好，请先尝试在网络情况良好时重试。
 * 检查 https://github.com/sqybi/baidu-hi-crawler/releases 是否有新版本，如果有，请使用新版本重试。
 * 如果有解决不了的问题，请在 https://github.com/sqybi/baidu-hi-crawler/issues 使用New Issue功能提出新的issue。尽量详细地描述你遇到问题的过程，你的系统信息，以及所有可以得到的错误信息。
+
+# 更新日志
+
+## v0.1.1
+
+* 修正了一个导致文章页面无法正常抓取的bug。
+* 修正了一个若没有手动建立Archive文件夹则不能顺利保存文件的bug。
+* 修正了README中的错误。
+
+## v0.1.0
+
+* 第一个正式版本。
