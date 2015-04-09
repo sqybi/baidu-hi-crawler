@@ -2,7 +2,7 @@
 
 namespace BaiduHiCrawler
 {
-    class Comment
+    public class Comment
     {
         public string Json { get; set; }
 

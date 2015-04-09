@@ -12,6 +12,8 @@ namespace BaiduHiCrawler
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Media;
+    using Microsoft.Win32;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -24,9 +26,13 @@ namespace BaiduHiCrawler
 
         private System.Windows.Forms.WebBrowser webBrowserCrawler;
 
+        private ArticleWindow articleWindow;
+
         public MainWindow()
         {
             InitializeComponent();
+            this.articleWindow = new ArticleWindow();
+            this.articleWindow.Hide();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -149,12 +155,60 @@ namespace BaiduHiCrawler
             }
 
             var spaceName = spaceLink.TrimEnd('/').Substring(spaceLink.TrimEnd('/').LastIndexOf('/') + 1);
-            using (var fileStream = new FileStream(spaceName + ".json", FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var fileStream = new FileStream(@".\Archive\" + spaceName + ".json", FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
                     streamWriter.Write(JsonConvert.SerializeObject(articles));
                 }
+            }
+        }
+
+        private void ButtonLoadFromLocal_Click(object sender, RoutedEventArgs e)
+        {
+            var archiveDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Archive");
+            if (!Directory.Exists(archiveDirectory))
+            {
+                archiveDirectory = "";
+            }
+
+            var openFileDialog = new OpenFileDialog
+                                     {
+                                         DefaultExt = ".json",
+                                         Filter = "JSON File (.json)|*.json",
+                                         InitialDirectory = archiveDirectory
+                                     };
+            
+            // Show open file dialog box
+            var result = openFileDialog.ShowDialog();
+
+            // Process open file dialog box results 
+            if (!result.HasValue || result == false)
+            {
+                return;
+            }
+
+            string fileName = openFileDialog.FileName;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            string jsonText;
+            using (var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                using (var streamReader = new StreamReader(fileStream))
+                {
+                    jsonText = streamReader.ReadToEnd();
+                }
+            }
+
+            var articles = JsonConvert.DeserializeObject<List<Article>>(jsonText);
+
+            this.ListBoxCrawlResult.Items.Clear();
+            foreach (var article in articles)
+            {
+                this.ListBoxCrawlResult.Items.Add(article);
             }
         }
 
@@ -232,7 +286,13 @@ namespace BaiduHiCrawler
                     continue;
                 }
 
-                var text = htmlDoc.Body.OuterHtml;
+                var htmlBody = htmlDoc.Body;
+                if (htmlBody == null)
+                {
+                    continue;
+                }
+
+                var text = htmlBody.OuterHtml;
                 if (succeedRegex.Match(text).Success)
                 {
                     return text;
@@ -245,6 +305,38 @@ namespace BaiduHiCrawler
             }
 
             return null;
+        }
+
+        private void ListBoxCrawlResult_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            DependencyObject obj = (DependencyObject)e.OriginalSource;
+
+            while (obj != null && obj != this.ListBoxCrawlResult)
+            {
+                if (obj.GetType() == typeof(ListBoxItem))
+                {
+                    var item = obj as ListBoxItem;
+                    if (item == null)
+                    {
+                        return;
+                    }
+
+                    var article = item.Content as Article;
+                    if (article == null)
+                    {
+                        return;
+                    }
+
+                    this.articleWindow.LoadArticle(article);
+                    this.articleWindow.Show();
+                }
+                obj = VisualTreeHelper.GetParent(obj);
+            }
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }
