@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using mshtml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -54,31 +55,30 @@ namespace BaiduHiCrawler
                 var spaceLinkRegex = new Regex(
                     @"<A href=""(http://hi.baidu.com/[^""]+)"">我的主页</A>",
                     RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                var text = await this.NavigateWithRegexCheck(this.webBrowserCrawler, Constants.HomeUri, spaceLinkRegex, null);
-                if (text == null)
+                var htmlDoc = await this.NavigateAndGetHtmlDocumentWithCheck(this.webBrowserCrawler, Constants.HomeUri, d => spaceLinkRegex.IsMatch(d.DocumentNode.OuterHtml), null);
+                if (htmlDoc == null)
                 {
-                    return;
+                    throw new Exception("Cannot navigate to home page");
                 }
-                var spaceLink = spaceLinkRegex.Match(text).Groups[1].Value;
+                var spaceLink = spaceLinkRegex.Match(htmlDoc.DocumentNode.OuterHtml).Groups[1].Value;
                 var spaceUri = new Uri(spaceLink);
 
                 // Get pages count
                 var pageCountRegex = new Regex(
-                    @"<A class=last href=""" + spaceLink + @"\?page=(\d+)"">尾页</A>",
+                    @"var PagerInfo = {\s+allCount : '(\d+)',\s+pageSize : '(\d+)',\s+curPage : '(\d+)'\s+};",
                     RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                var pageCountSucceedRegex = new Regex(
-                    @"<DIV class=mod-pagerbar>",
-                    RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                text = await this.NavigateWithRegexCheck(this.webBrowserCrawler, spaceUri, pageCountSucceedRegex, null);
-                if (text == null)
+                htmlDoc = await this.NavigateAndGetHtmlDocumentWithCheck(this.webBrowserCrawler, spaceUri, d => pageCountRegex.IsMatch(d.DocumentNode.OuterHtml), null);
+                if (htmlDoc == null)
                 {
-                    return;
+                    throw new Exception("Cannot navigate to space page");
                 }
-                var match = pageCountRegex.Match(text);
-                int totalPage;
-                if (!match.Success || !int.TryParse(match.Groups[1].Value, out totalPage))
+                var match = pageCountRegex.Match(htmlDoc.DocumentNode.OuterHtml);
+                int allCount;
+                int pageSize;
+                int totalPage = 1;
+                if (match.Success  && int.TryParse(match.Groups[1].Value, out allCount) && int.TryParse(match.Groups[2].Value, out pageSize))
                 {
-                    totalPage = 1;
+                    totalPage = (allCount + pageSize - 1) / pageSize;
                 }
 
                 // Get articles on each page
@@ -87,42 +87,49 @@ namespace BaiduHiCrawler
                 {
                     // Get article list
                     var pageUri = new Uri(spaceLink + "?page=" + pageId);
-                    var pageContentRegex = new Regex(@"<A class=""a-incontent a-title cs-contentblock-hoverlink"" href=""([^""]+)"" target=_blank>[^<]*</A>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                    var pageSucceedRegex = pageCountSucceedRegex;
-                    text = await this.NavigateWithRegexCheck(this.webBrowserCrawler, pageUri, pageSucceedRegex, null);
-                    if (text == null)
+                    var articleNodesSelector = @"//a[@class=""a-incontent a-title cs-contentblock-hoverlink""]";
+                    htmlDoc = await this.NavigateAndGetHtmlDocumentWithCheck(this.webBrowserCrawler, pageUri, d =>
+                    {
+                        var nodes = d.DocumentNode.SelectNodes(articleNodesSelector);
+                        return nodes != null && nodes.Count > 0;
+                    }, null);
+                    if (htmlDoc == null)
                     {
                         continue;
                     }
 
-                    var articleMatches = pageContentRegex.Matches(text);
-                    foreach (Match articleMatch in articleMatches)
+                    var articleNodes = htmlDoc.DocumentNode.SelectNodes(articleNodesSelector);
+                    if (articleNodes == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var articleNode in articleNodes)
                     {
                         // Get single article link
-                        var articleLink = "http://hi.baidu.com" + articleMatch.Groups[1].Value;
+                        var articleLink = "http://hi.baidu.com" + articleNode.Attributes["href"].Value;
                         var articleUri = new Uri(articleLink);
 
                         // Regexes
-                        var articleTitleRegex =
-                            new Regex(
-                                @"<h2 class=""title content-title"">([^<]*)</h2>",
-                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                        var articleHtmlContentRegex =
-                            new Regex(
-                                @"<div id=content class=""content mod-cs-content text-content clearfix"">(.*)</div>\s+<div class=""mod-tagbox clearfix"">",
-                                RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                        var articleTitleSelector = @"//h2[@class=""title content-title""]";
+                        var articleHtmlContentSelector = @"//div[@id=""content""]";
 
                         // Get article page text
-                        text = await this.NavigateWithRegexCheck(this.webBrowserCrawler, articleUri, articleTitleRegex, null);
-                        if (text == null)
+                        htmlDoc = await this.NavigateAndGetHtmlDocumentWithCheck(this.webBrowserCrawler, articleUri,
+                            d =>
+                            {
+                                var nodes = d.DocumentNode.SelectNodes(articleTitleSelector);
+                                return nodes != null && nodes.Count > 0;
+                            }, null);
+                        if (htmlDoc == null)
                         {
                             continue;
                         }
 
                         // Get article
                         var article = new Article();
-                        article.Title = articleTitleRegex.Match(text).Groups[1].Value;
-                        article.HtmlContent = articleHtmlContentRegex.Match(text).Groups[1].Value;
+                        article.Title = htmlDoc.DocumentNode.SelectNodes(articleTitleSelector)[0].InnerText;
+                        article.HtmlContent = htmlDoc.DocumentNode.SelectNodes(articleHtmlContentSelector)[0].InnerHtml;
 
                         // Get article comments (by json, not regex)
                         article.Comments = new List<Comment>();
@@ -156,8 +163,14 @@ namespace BaiduHiCrawler
                     }
                 }
 
+                // Write to json file
+                if (!Directory.Exists(Constants.LocalArchiveFolder))
+                {
+                    Directory.CreateDirectory(Constants.LocalArchiveFolder);
+                }
+
                 var spaceName = spaceLink.TrimEnd('/').Substring(spaceLink.TrimEnd('/').LastIndexOf('/') + 1);
-                using (var fileStream = new FileStream(@".\Archive\" + spaceName + ".json", FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var fileStream = new FileStream(Path.Combine(Constants.LocalArchiveFolder, spaceName + ".json"), FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     using (var streamWriter = new StreamWriter(fileStream))
                     {
@@ -260,9 +273,13 @@ namespace BaiduHiCrawler
             return articleJsonText;
         }
 
-        private async Task<string> NavigateWithRegexCheck(System.Windows.Forms.WebBrowser webBrowser, Uri uri, Regex succeedRegex, Regex failedRegex)
+        private async Task<HtmlAgilityPack.HtmlDocument> NavigateAndGetHtmlDocumentWithCheck(
+            System.Windows.Forms.WebBrowser webBrowser,
+            Uri uri,
+            Func<HtmlAgilityPack.HtmlDocument, bool> isSucceed,
+            Func<HtmlAgilityPack.HtmlDocument, bool> isFailed)
         {
-            if (succeedRegex == null)
+            if (isSucceed == null)
             {
                 return null;
             }
@@ -290,25 +307,21 @@ namespace BaiduHiCrawler
             {
                 await Task.Delay(1000);
 
-                var htmlDoc = webBrowser.Document;
-                if (htmlDoc == null)
+                var text = webBrowser.DocumentText;
+                if (text == null)
                 {
                     continue;
                 }
 
-                var htmlBody = htmlDoc.Body;
-                if (htmlBody == null)
+                var htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                htmlDoc.LoadHtml(text);
+
+                if (isSucceed(htmlDoc))
                 {
-                    continue;
+                    return htmlDoc;
                 }
 
-                var text = htmlBody.OuterHtml;
-                if (succeedRegex.Match(text).Success)
-                {
-                    return text;
-                }
-
-                if (failedRegex != null && failedRegex.Match(text).Success)
+                if (isFailed != null && isFailed(htmlDoc))
                 {
                     return null;
                 }
