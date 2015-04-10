@@ -16,8 +16,6 @@ namespace BaiduHiCrawler
     using System.Windows.Controls;
     using System.Windows.Media;
 
-    using HtmlAgilityPack;
-
     using Microsoft.Win32;
 
     /// <summary>

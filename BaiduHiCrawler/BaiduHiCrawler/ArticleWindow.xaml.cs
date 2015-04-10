@@ -1,6 +1,7 @@
 ﻿namespace BaiduHiCrawler
 {
     using System;
+    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.Windows;
 
@@ -22,6 +23,7 @@
             this.article = null;
 
             this.webBrowserCrawler = this.WindowsFormsHostBrowser.Child as System.Windows.Forms.WebBrowser;
+            Contract.Assume(this.webBrowserCrawler != null);
             this.webBrowserCrawler.AllowNavigation = true;
         }
 
