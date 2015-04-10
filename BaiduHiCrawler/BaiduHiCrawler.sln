@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaiduHiCrawler", "BaiduHiCrawler\BaiduHiCrawler.csproj", "{18C28AF0-7177-412C-9593-27E89681125B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaiduHiCrawlerUpdater", "BaiduHiCrawlerUpdater\BaiduHiCrawlerUpdater.csproj", "{18B4BBC7-4E95-4F10-9CEF-D3BB039692BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{18C28AF0-7177-412C-9593-27E89681125B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18C28AF0-7177-412C-9593-27E89681125B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18C28AF0-7177-412C-9593-27E89681125B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18B4BBC7-4E95-4F10-9CEF-D3BB039692BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18B4BBC7-4E95-4F10-9CEF-D3BB039692BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18B4BBC7-4E95-4F10-9CEF-D3BB039692BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18B4BBC7-4E95-4F10-9CEF-D3BB039692BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
