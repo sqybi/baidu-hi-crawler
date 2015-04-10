@@ -25,6 +25,8 @@ namespace BaiduHiCrawler
 
         public ArticleWindow()
         {
+            Logger.LogVerbose("Initialize ArticleWindow");
+
             InitializeComponent();
 
             this.article = null;
@@ -41,8 +43,16 @@ namespace BaiduHiCrawler
 
         private void LoadArticleInternal()
         {
+            Logger.LogInfo("ArticleWindow start to load article");
+            Logger.LogVerbose(
+                "Article: Title [{0}], HtmlContent [{1}], Comments Count [{2}]",
+                this.article.Title,
+                this.article.HtmlContent,
+                this.article.Comments.Count);
+
             if (this.article == null)
             {
+                Logger.LogWarning("Article to load is null, exit");
                 return;
             }
 
@@ -60,10 +70,13 @@ namespace BaiduHiCrawler
                         Environment.NewLine,
                         comment.Content));
             }
+
+            Logger.LogInfo("ArticleWindow finished to load article");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            Logger.LogVerbose("Close ArticleWindow");
             this.Hide();
             e.Cancel = true;
         }
