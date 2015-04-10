@@ -8,12 +8,16 @@ using Newtonsoft.Json.Linq;
 namespace BaiduHiCrawler
 {
     using System;
+    using System.Globalization;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
+
+    using HtmlAgilityPack;
+
     using Microsoft.Win32;
 
     /// <summary>
@@ -171,14 +175,14 @@ namespace BaiduHiCrawler
                     Logger.LogVerbose("Getting articles list on page {0}", pageId);
 
                     var pageUri = new Uri(spaceLink + "?page=" + pageId);
-                    var articleNodesSelector = @"//a[@class=""a-incontent a-title cs-contentblock-hoverlink""]";
+                    const string ArticleNodesSelector = @"//a[@class=""a-incontent a-title cs-contentblock-hoverlink""]";
 
                     htmlDoc = await this.NavigateAndGetHtmlDocumentWithCheck(
                         this.webBrowserCrawler,
                         pageUri,
                         d =>
                             {
-                                var nodes = d.DocumentNode.SelectNodes(articleNodesSelector);
+                                var nodes = d.DocumentNode.SelectNodes(ArticleNodesSelector);
                                 return nodes != null && nodes.Count > 0;
                             },
                         null);
@@ -191,20 +195,23 @@ namespace BaiduHiCrawler
                         continue;
                     }
 
-                    var articleNodes = htmlDoc.DocumentNode.SelectNodes(articleNodesSelector); // articleNodes here should never be null
+                    var articleNodes = htmlDoc.DocumentNode.SelectNodes(ArticleNodesSelector); // articleNodes here should never be null
 
                     // Get articles
                     foreach (var articleNode in articleNodes)
                     {
                         // Get single article link
                         var articleLink = "http://hi.baidu.com" + articleNode.Attributes["href"].Value;
+                        var articleId = articleLink.TrimEnd('/')
+                            .Substring(articleLink.TrimEnd('/').LastIndexOf('/') + 1);
                         var articleUri = new Uri(articleLink);
 
                         Logger.LogVerbose("Getting article {0}", articleLink);
 
                         // Regexes
-                        var articleTitleSelector = @"//h2[@class=""title content-title""]";
-                        var articleHtmlContentSelector = @"//div[@id=""content""]";
+                        const string ArticleTitleSelector = @"//h2[@class=""title content-title""]";
+                        const string ArticleTimestampSelector = @"//div[@class=""content-other-info""]/span";
+                        const string ArticleHtmlContentSelector = @"//div[@id=""content""]";
 
                         // Get article page text
                         htmlDoc =
@@ -213,7 +220,7 @@ namespace BaiduHiCrawler
                                 articleUri,
                                 d =>
                                     {
-                                        var nodes = d.DocumentNode.SelectNodes(articleTitleSelector);
+                                        var nodes = d.DocumentNode.SelectNodes(ArticleTitleSelector);
                                         return nodes != null && nodes.Count > 0;
                                     },
                                 null);
@@ -231,13 +238,36 @@ namespace BaiduHiCrawler
                             // Get article
                             var article = new Article();
 
-                            article.Title = htmlDoc.DocumentNode.SelectNodes(articleTitleSelector)[0].InnerText;
-                            article.HtmlContent = htmlDoc.DocumentNode.SelectNodes(articleHtmlContentSelector)[0].InnerHtml;
+                            var articleTitleNodes = htmlDoc.DocumentNode.SelectNodes(ArticleTitleSelector);
+                            var articleTimestampNodes = htmlDoc.DocumentNode.SelectNodes(ArticleTimestampSelector);
+                            var articleHtmlContentNodes = htmlDoc.DocumentNode.SelectNodes(ArticleHtmlContentSelector);
+
+                            article.Id = articleId;
+                            article.Title = articleTitleNodes == null || articleTitleNodes.Count == 0
+                                                ? null
+                                                : articleTitleNodes[0].InnerText;
+                            article.HtmlContent = articleHtmlContentNodes == null || articleHtmlContentNodes.Count == 0
+                                                  ? null
+                                                  : articleHtmlContentNodes[0].InnerHtml;
+
+                            article.Timestamp = null;
+                            if (articleTimestampNodes != null && articleTimestampNodes.Count > 0)
+                            {
+                                DateTime articleTimestamp;
+                                if (
+                                    DateTime.TryParseExact(
+                                        articleTimestampNodes[0].InnerText,
+                                        "yyyy-MM-dd HH:mm",
+                                        CultureInfo.InvariantCulture,
+                                        DateTimeStyles.AdjustToUniversal,
+                                        out articleTimestamp))
+                                {
+                                    article.Timestamp = articleTimestamp.AddHours(-8); // Use UTC time
+                                }
+                            }
 
                             // Get article comments (by json, not regex)
                             article.Comments = new List<Comment>();
-                            var articleId = articleLink.TrimEnd('/')
-                                .Substring(articleLink.TrimEnd('/').LastIndexOf('/') + 1);
                             var articleCommentJsonText = GetCommentJsonText(articleId, 0, 1);
                             var articleCommentJsonObject = JObject.Parse(articleCommentJsonText);
                             var articleCommentCount = articleCommentJsonObject["data"][0]["total_count"].Value<int>();

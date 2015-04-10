@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-
-namespace BaiduHiCrawler
+﻿namespace BaiduHiCrawler
 {
+    using System;
+    using System.Globalization;
+    using System.Windows;
+
     /// <summary>
     /// Interaction logic for ArticleWindow.xaml
     /// </summary>
@@ -56,19 +46,31 @@ namespace BaiduHiCrawler
                 return;
             }
 
-            this.Title = string.Format("Article: {0}", this.article.Title);
-            this.webBrowserCrawler.DocumentText = this.article.HtmlContent;
+            this.Title = string.Format(
+                "Article [{0}{1}]: {2}",
+                this.article.Id,
+                this.article.Timestamp.HasValue
+                    ? " @ "
+                      + TimeZoneInfo.ConvertTime(this.article.Timestamp.Value, TimeZoneInfo.Utc, TimeZoneInfo.Local)
+                            .ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
+                    : string.Empty,
+                this.article.Title);
+            this.webBrowserCrawler.DocumentText = this.article.HtmlContent ?? string.Empty;
 
             this.ListBoxComments.Items.Clear();
-            foreach (var comment in this.article.Comments)
+            if (this.article.Comments != null)
             {
-                this.ListBoxComments.Items.Add(
-                    string.Format(
-                        "{0} @ {1}:{2}{3}",
-                        comment.Author,
-                        TimeZoneInfo.ConvertTime(comment.Timestamp, TimeZoneInfo.Utc, TimeZoneInfo.Local),
-                        Environment.NewLine,
-                        comment.Content));
+                foreach (var comment in this.article.Comments)
+                {
+                    this.ListBoxComments.Items.Add(
+                        string.Format(
+                            "{0} @ {1}:{2}{3}",
+                            comment.Author,
+                            TimeZoneInfo.ConvertTime(comment.Timestamp, TimeZoneInfo.Utc, TimeZoneInfo.Local)
+                                .ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+                            Environment.NewLine,
+                            comment.Content));
+                }
             }
 
             Logger.LogInfo("ArticleWindow finished to load article");
