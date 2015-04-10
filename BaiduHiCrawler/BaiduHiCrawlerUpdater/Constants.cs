@@ -9,7 +9,7 @@
         public static readonly Version CurrentVersion = new Version
         {
             Major = 0,
-            Minor = 1,
+            Minor = 2,
             Revision = 0
         };
 
