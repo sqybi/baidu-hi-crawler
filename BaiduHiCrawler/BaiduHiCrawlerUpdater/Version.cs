@@ -80,34 +80,9 @@
             return this.Revision.CompareTo(other.Revision);
         }
 
-        public static bool operator >(Version left, Version right)
+        public override string ToString()
         {
-            return left.CompareTo(right) > 0;
-        }
-
-        public static bool operator <(Version left, Version right)
-        {
-            return left.CompareTo(right) < 0;
-        }
-
-        public static bool operator ==(Version left, Version right)
-        {
-            if (left == null || right == null)
-            {
-                return left == null && right == null;
-            }
-
-            return left.CompareTo(right) == 0;
-        }
-
-        public static bool operator !=(Version left, Version right)
-        {
-            if (left == null || right == null)
-            {
-                return left == null && right == null;
-            }
-
-            return left.CompareTo(right) != 0;
+            return string.Format("v{0}.{1}.{2}", this.Major, this.Minor, this.Revision);
         }
     }
 }

@@ -118,6 +118,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BaiduHiCrawlerUpdater\BaiduHiCrawlerUpdater.csproj">
+      <Project>{18b4bbc7-4e95-4f10-9cef-d3bb039692be}</Project>
+      <Name>BaiduHiCrawlerUpdater</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

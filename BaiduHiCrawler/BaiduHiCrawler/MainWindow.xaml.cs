@@ -1,14 +1,11 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using mshtml;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace BaiduHiCrawler
+﻿namespace BaiduHiCrawler
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Globalization;
+    using System.IO;
+    using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -17,6 +14,8 @@ namespace BaiduHiCrawler
     using System.Windows.Media;
 
     using Microsoft.Win32;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -27,11 +26,9 @@ namespace BaiduHiCrawler
 
         private bool isLoaded;
 
-        private bool isNavigationFailed;
-
         private System.Windows.Forms.WebBrowser webBrowserCrawler;
 
-        private ArticleWindow articleWindow;
+        private readonly ArticleWindow articleWindow;
 
         #endregion
 
@@ -51,7 +48,7 @@ namespace BaiduHiCrawler
 
         #region UI Event Handlers
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Logger.LogVerbose("Loaded MainWindow");
 
@@ -66,9 +63,14 @@ namespace BaiduHiCrawler
             }
         }
 
+        private async void Window_ContentRendered(object sender, EventArgs e)
+        {
+            await Task.Run(new Action(CheckUpdate));
+        }
+
         private void Window_Closed(object sender, EventArgs e)
         {
-            Application.Current.Shutdown();
+            Shutdown();
         }
 
         private async void ButtonNavigateToLoginPage_Click(object sender, RoutedEventArgs e)
@@ -519,6 +521,55 @@ namespace BaiduHiCrawler
 
         #region Helper Methods
 
+        private static void CheckUpdate()
+        {
+            var latestVersionJsonObject = BaiduHiCrawlerUpdater.UpdateHelper.GetLatestReleasedVersionJsonObject();
+
+            if (BaiduHiCrawlerUpdater.UpdateHelper.CheckNewVersion(latestVersionJsonObject))
+            {
+                var result = MessageBox.Show(
+                    string.Format("Update to version {0} is available. Would you like to update now?",
+                    latestVersionJsonObject["tag_name"].Value<string>()),
+                    "BaiduHiCrawler",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }
+
+                var tempDirectory = Path.Combine(Path.GetTempPath(), BaiduHiCrawlerUpdater.Constants.TempFolderName);
+
+                if (Directory.Exists(tempDirectory))
+                {
+                    Directory.Delete(tempDirectory, true);
+                }
+                Directory.CreateDirectory(tempDirectory);
+
+                File.Copy(BaiduHiCrawlerUpdater.Constants.UpdaterFileName, Path.Combine(tempDirectory, BaiduHiCrawlerUpdater.Constants.UpdaterFileName));
+                foreach (var fileName in BaiduHiCrawlerUpdater.Constants.UpdaterDependentFileNames)
+                {
+                    File.Copy(fileName, Path.Combine(tempDirectory, fileName));
+                }
+
+                var processStartInfo =
+                    new ProcessStartInfo(Path.Combine(tempDirectory, BaiduHiCrawlerUpdater.Constants.UpdaterFileName),
+                        string.Format(@"""{0}"" true", Directory.GetCurrentDirectory()));
+                processStartInfo.CreateNoWindow = false;
+                processStartInfo.WindowStyle = ProcessWindowStyle.Normal;
+                processStartInfo.WorkingDirectory = tempDirectory;
+                Process.Start(processStartInfo);
+
+                Shutdown();
+            }
+        }
+
+        private static void Shutdown()
+        {
+            Application.Current.Dispatcher.InvokeShutdown();
+        }
+
         private static string GetCommentJsonText(string articleId, int start, int count)
         {
             var requestUrl = string.Format(Constants.CommentRetrivalUrlPattern, articleId, start, count);
@@ -602,7 +653,6 @@ namespace BaiduHiCrawler
                 {
                     webBrowser.Navigate(uri);
                     this.isLoaded = false;
-                    this.isNavigationFailed = false;
                     webBrowser.Navigated += (sender, args) =>
                     {
                         this.isLoaded = true;
