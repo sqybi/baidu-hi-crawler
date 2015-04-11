@@ -16,5 +16,7 @@
         public static readonly Uri HomeUri = new Uri("http://hi.baidu.com/home");
 
         public static readonly DateTime CommentBaseDateTime = new DateTime(1970, 1, 1, 0, 0, 0);
+
+        public static readonly LogLevel LoveLevel = LogLevel.Warning;
     }
 }

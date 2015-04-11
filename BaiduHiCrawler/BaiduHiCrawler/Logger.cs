@@ -21,7 +21,7 @@
 
         private Logger()
         {
-            this.logLevel = LogLevel.Warning;
+            this.logLevel = Constants.LogLevel;
 
             var logFileName = Path.Combine(Directory.GetCurrentDirectory(), Constants.LogsFolder, @"BaiduHiCrawler.log");
             lock (this.logFileStreamWriterLock)
