@@ -17,6 +17,6 @@
 
         public static readonly DateTime CommentBaseDateTime = new DateTime(1970, 1, 1, 0, 0, 0);
 
-        public static readonly LogLevel LoveLevel = LogLevel.Warning;
+        public static readonly LogLevel LogLevel = LogLevel.Verbose;
     }
 }
