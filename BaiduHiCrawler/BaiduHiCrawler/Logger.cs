@@ -92,6 +92,7 @@
 
                 var logText = string.Format(format, args);
                 Instance.logFileStreamWriter.WriteLine("[{0} | {1}] {2}", DateTime.UtcNow.ToString("u"), level, logText);
+                Instance.logFileStreamWriter.Flush();
             }
         }
 

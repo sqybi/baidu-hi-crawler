@@ -667,6 +667,8 @@
                     }
                 } while (!this.isLoaded);
 
+                Logger.LogVerbose("WebBrowser navigation finished");
+
                 for (int i = 0; i < 60; i++)
                 {
                     await Task.Delay(1000);
@@ -682,13 +684,22 @@
                         var htmlDoc = new HtmlAgilityPack.HtmlDocument();
                         htmlDoc.LoadHtml(text);
 
+                        if (htmlDoc.DocumentNode != null)
+                        {
+                            Logger.LogVerbose("Loaded document: {0}", htmlDoc.DocumentNode.OuterHtml);
+                        }
+                        else
+                        {
+                            Logger.LogVerbose("No document loaded");
+                        }
+
                         if (isSucceed(htmlDoc))
                         {
                             Logger.LogInfo("Finished navigating to {0} and getting HTML document", uri.AbsoluteUri);
 
                             return htmlDoc;
                         }
-
+                        
                         if (isFailed != null && isFailed(htmlDoc))
                         {
                             Logger.LogWarning(
@@ -718,10 +729,6 @@
 
                 return null;
             }
-
-            Logger.LogWarning(
-                "Failed to navigate to {0} and getting HTML document because cannot satisfy isSucceed condition",
-                uri.AbsoluteUri);
 
             return null;
         }
