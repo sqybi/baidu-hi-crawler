@@ -138,7 +138,7 @@
 
                 var pageCountRegex =
                     new Regex(
-                        @"var PagerInfo = {\s+allCount : '(\d+)',\s+pageSize : '(\d+)',\s+curPage : '(\d+)'\s+};",
+                        @"var PagerInfo = {\s+allCount : '(\d+)',\s+pageSize : '(\d+)',\s+curPage : '(\d+)'[^}]+};",
                         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
                 htmlDoc =
@@ -641,7 +641,7 @@
             // Check if should return null
             if (isSucceed == null)
             {
-                Logger.LogInfo("Navigation to {} returns null becuase isSucceed is null");
+                Logger.LogInfo("Navigation to {0} returns null becuase isSucceed is null", uri.AbsoluteUri);
 
                 return null;
             }
