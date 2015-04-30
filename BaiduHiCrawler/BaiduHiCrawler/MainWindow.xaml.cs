@@ -111,34 +111,38 @@
 
             try
             {
-                // Get URI of hi space
-                Logger.LogVerbose("Getting URL of personal space home page");
+                //// Get URI of hi space
+                //Logger.LogVerbose("Getting URL of personal space home page");
 
-                var spaceLinkRegex = new Regex(
-                    @"<A href=""(http://hi.baidu.com/[^""]+)"">我的主页</A>",
-                    RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                //var spaceLinkRegex = new Regex(
+                //    @"<A href=""(http://hi.baidu.com/[^""]+)"">我的主页</A>",
+                //    RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-                var htmlDoc =
-                    await
-                    this.NavigateAndGetHtmlDocumentWithCheck(
-                        this.webBrowserCrawler,
-                        Constants.HomeUri,
-                        d => spaceLinkRegex.IsMatch(d.DocumentNode.OuterHtml),
-                        null);
-                if (htmlDoc == null)
-                {
-                    throw new Exception("Cannot get space home page URL");
-                }
+                //var htmlDoc =
+                //    await
+                //    this.NavigateAndGetHtmlDocumentWithCheck(
+                //        this.webBrowserCrawler,
+                //        Constants.HomeUri,
+                //        d => spaceLinkRegex.IsMatch(d.DocumentNode.OuterHtml),
+                //        null);
+                //if (htmlDoc == null)
+                //{
+                //    throw new Exception("Cannot get space home page URL");
+                //}
 
-                var spaceLink = spaceLinkRegex.Match(htmlDoc.DocumentNode.OuterHtml).Groups[1].Value;
+                //var spaceLink = spaceLinkRegex.Match(htmlDoc.DocumentNode.OuterHtml).Groups[1].Value;
+                //var spaceUri = new Uri(spaceLink);
+
+                var spaceLink = "http://hi.baidu.com/xinr_kazemai";
                 var spaceUri = new Uri(spaceLink);
+                HtmlAgilityPack.HtmlDocument htmlDoc;
 
                 // Get pages count
                 Logger.LogVerbose("Getting total page count of space");
 
                 var pageCountRegex =
                     new Regex(
-                        @"var PagerInfo = {\s+allCount : '(\d+)',\s+pageSize : '(\d+)',\s+curPage : '(\d+)'[^}]+};",
+                        @"var PagerInfo = {\s+allCount : '(\d+)',\s+pageSize : '(\d+)',\s+curPage : '(\d+)'",
                         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
                 htmlDoc =
@@ -175,7 +179,7 @@
                     Logger.LogVerbose("Getting articles list on page {0}", pageId);
 
                     var pageUri = new Uri(spaceLink + "?page=" + pageId);
-                    const string ArticleNodesSelector = @"//a[@class=""a-incontent a-title cs-contentblock-hoverlink""]";
+                    const string ArticleNodesSelector = @"//a[contains(@class, ""a-title"") or contains(@class, ""blog-item"")]";
 
                     htmlDoc = await this.NavigateAndGetHtmlDocumentWithCheck(
                         this.webBrowserCrawler,
@@ -201,7 +205,18 @@
                     foreach (var articleNode in articleNodes)
                     {
                         // Get single article link
-                        var articleLink = "http://hi.baidu.com" + articleNode.Attributes["href"].Value;
+                        var articleLink = articleNode.Attributes["href"].Value;
+                        if (!articleLink.StartsWith("http://hi.baidu.com"))
+                        {
+                            if (!articleLink.StartsWith("/"))
+                            {
+                                articleLink = "http://hi.baidu.com/" + articleLink;
+                            }
+                            else
+                            {
+                                articleLink = "http://hi.baidu.com" + articleLink;
+                            }
+                        }
                         var articleId = articleLink.TrimEnd('/')
                             .Substring(articleLink.TrimEnd('/').LastIndexOf('/') + 1);
                         var articleUri = new Uri(articleLink);
