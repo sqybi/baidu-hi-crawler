@@ -10,7 +10,7 @@
         {
             Major = 0,
             Minor = 2,
-            Revision = 0
+            Revision = 1
         };
 
         public const string MainProcessName = "BaiduHiCrawler";
