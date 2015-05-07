@@ -125,6 +125,19 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>rmdir "$(SolutionDir)\distrib\$(ConfigurationName)\" /S /Q
+mkdir "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "BaiduHiCrawler.exe" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "BaiduHiCrawler.exe.config" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "BaiduHiCrawlerUpdater.exe" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "BaiduHiCrawlerUpdater.exe.config" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "Newtonsoft.Json.dll" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "HtmlAgilityPack.dll" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "$(SolutionDir)\..\README.md" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+xcopy "$(SolutionDir)\..\LICENSE" "$(SolutionDir)\distrib\$(ConfigurationName)\"
+"$(SolutionDir)\BuildTool\7za.exe" a -tzip -y -bd "$(SolutionDir)\distrib\$(ConfigurationName)\BaiduHiCrawler.zip" "$(SolutionDir)\distrib\$(ConfigurationName)\*"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
