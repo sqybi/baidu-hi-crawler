@@ -111,31 +111,27 @@
 
             try
             {
-                //// Get URI of hi space
-                //Logger.LogVerbose("Getting URL of personal space home page");
+                // Get URI of hi space
+                Logger.LogVerbose("Getting URL of personal space home page");
 
-                //var spaceLinkRegex = new Regex(
-                //    @"<A href=""(http://hi.baidu.com/[^""]+)"">我的主页</A>",
-                //    RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                var spaceLinkRegex = new Regex(
+                    @"<A href=""(http://hi.baidu.com/[^""]+)"">我的主页</A>",
+                    RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-                //var htmlDoc =
-                //    await
-                //    this.NavigateAndGetHtmlDocumentWithCheck(
-                //        this.webBrowserCrawler,
-                //        Constants.HomeUri,
-                //        d => spaceLinkRegex.IsMatch(d.DocumentNode.OuterHtml),
-                //        null);
-                //if (htmlDoc == null)
-                //{
-                //    throw new Exception("Cannot get space home page URL");
-                //}
+                var htmlDoc =
+                    await
+                    this.NavigateAndGetHtmlDocumentWithCheck(
+                        this.webBrowserCrawler,
+                        Constants.HomeUri,
+                        d => spaceLinkRegex.IsMatch(d.DocumentNode.OuterHtml),
+                        null);
+                if (htmlDoc == null)
+                {
+                    throw new Exception("Cannot get space home page URL");
+                }
 
-                //var spaceLink = spaceLinkRegex.Match(htmlDoc.DocumentNode.OuterHtml).Groups[1].Value;
-                //var spaceUri = new Uri(spaceLink);
-
-                var spaceLink = "http://hi.baidu.com/xinr_kazemai";
+                var spaceLink = spaceLinkRegex.Match(htmlDoc.DocumentNode.OuterHtml).Groups[1].Value;
                 var spaceUri = new Uri(spaceLink);
-                HtmlAgilityPack.HtmlDocument htmlDoc;
 
                 // Get pages count
                 Logger.LogVerbose("Getting total page count of space");
